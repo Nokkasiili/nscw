@@ -76,19 +76,6 @@ void printcolor(char s) {
 
   write(STDOUT_FILENO, &s, 1);
 }
-void setTextColor(enum ColorCode color) {
-  switch (color) {
-  case COLOR_RESET:
-    write(STDOUT_FILENO, RES, 5);
-    break;
-  case COLOR_DIGIT:
-    write(STDOUT_FILENO, CLR, 5);
-    break;
-  case COLOR_SPECIAL:
-    write(STDOUT_FILENO, CLR2, 5);
-    break;
-  }
-}
 
 int ttySetRaw(int fd) {
   struct termios t;
