@@ -13,11 +13,16 @@
 #include <unistd.h>
 
 #define CLR "\x1B[94m"
-#define CLR2 "\x1B[97m"
+#define CLR2 "\x1B[91m"
 #define RES "\x1B[0m"
 
 int reset = 0;
 int master;
+enum ColorCode {
+  COLOR_RESET,
+  COLOR_DIGIT,
+  COLOR_SPECIAL,
+};
 
 char *getpath(char *program) {
   const char *env = getenv("PATH");
@@ -39,49 +44,50 @@ char *getpath(char *program) {
   return NULL;
 }
 
-bool isspecial(char s) {
-  const char set[] = {'(', ')', '[', ']', '{', '}',  '*', '+', '-',
-                      '/', '.', ',', ';', ':', '\\', '!', '"', '#',
-                      '%', '&', '@', '$', '=', '?',  '*'};
-  int i;
-  for (i = 0; i < strlen(set); i++) {
-    if (s == set[i])
-      return true;
-  }
-  return false;
-}
-
 void printcolor(char s) {
 
   if (isdigit(s)) {
     switch (reset) {
-    case 0:
+    case COLOR_RESET:
       write(STDOUT_FILENO, CLR, 5);
       break;
-    case 2:
+    case COLOR_SPECIAL:
       write(STDOUT_FILENO, RES, 5);
       write(STDOUT_FILENO, CLR, 5);
       break;
     }
     reset = 1;
-  } else if (isspecial(s)) {
+  } else if (!isupper(s) && !islower(s) && !isspace(s)) {
     switch (reset) {
-    case 0:
+    case COLOR_RESET:
       write(STDOUT_FILENO, CLR2, 5);
       break;
-    case 1:
+    case COLOR_DIGIT:
       write(STDOUT_FILENO, RES, 5);
       write(STDOUT_FILENO, CLR2, 5);
       break;
     }
-    reset = 2;
+    reset = COLOR_SPECIAL;
   } else {
     if (reset)
       write(STDOUT_FILENO, RES, 5);
-    reset = 0;
+    reset = COLOR_RESET;
   }
 
   write(STDOUT_FILENO, &s, 1);
+}
+void setTextColor(enum ColorCode color) {
+  switch (color) {
+  case COLOR_RESET:
+    write(STDOUT_FILENO, RES, 5);
+    break;
+  case COLOR_DIGIT:
+    write(STDOUT_FILENO, CLR, 5);
+    break;
+  case COLOR_SPECIAL:
+    write(STDOUT_FILENO, CLR2, 5);
+    break;
+  }
 }
 
 int ttySetRaw(int fd) {
